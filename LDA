@@ -1,0 +1,52 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
+data = pd.read_csv("iris.csv")
+
+
+# Step 3: Extract features (X) and target labels (y)
+X = data.iloc[:, :-1].values  # All columns except the last one (features)
+y = data.iloc[:, -1].values   # Last column (target labels: Species)
+
+# Step 4: Standardize the data (mean=0, std=1)
+scaler = StandardScaler()
+X_standardized = scaler.fit_transform(X)
+
+# Step 5: Apply LDA to reduce the data to 2 components
+lda = LinearDiscriminantAnalysis(n_components=2)
+X_lda = lda.fit_transform(X_standardized, y)
+
+# Step 6: Visualize the LDA-transformed data in 2D
+plt.figure(figsize=(8, 6))
+classes = data['Species'].unique()
+colors = ['g', 'b', 'r']
+
+for species, color in zip(classes, colors):
+    plt.scatter(X_lda[y == species, 0], X_lda[y == species, 1], 
+                color=color, label=species)
+
+plt.xlabel('LD1')
+plt.ylabel('LD2')
+plt.title('LDA: 2D Projection of the Iris Dataset')
+plt.legend()
+plt.show()
+# Step 7: Apply PCA to reduce the data to 2 components
+
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_standardized)
+
+# Step 8: Visualize the PCA-transformed data in 2D
+plt.figure(figsize=(8, 6))
+
+for species, color in zip(classes, colors):
+    plt.scatter(X_pca[y == species, 0], X_pca[y == species, 1], 
+                color=color, label=species)
+
+plt.xlabel('PC1')
+plt.ylabel('PC2')
+plt.title('PCA: 2D Projection of the Iris Dataset')
+plt.legend()
+plt.show()
