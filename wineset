@@ -1,0 +1,84 @@
+# Step 1: Import Required Libraries
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_wine
+from sklearn.model_selection import train_test_split
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
+from sklearn.decomposition import PCA  # Ensure PCA is imported
+import matplotlib.pyplot as plt
+
+# Step 2: Load the Dataset
+data = load_wine()
+X = data.data  # Features (13 features)
+y = data.target  # Target labels (3 classes)
+
+# Step 3: Split the Data into Train and Test Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+
+# Step 4: Train the LDA Model
+lda = LinearDiscriminantAnalysis()
+lda.fit(X_train, y_train)
+y_pred_lda = lda.predict(X_test)
+
+# Step 5: Evaluate the LDA Model
+print("LDA Model Performance:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_lda):.2f}")
+print(f"Precision: {precision_score(y_test, y_pred_lda, average='macro'):.2f}")
+print(f"Recall: {recall_score(y_test, y_pred_lda, average='macro'):.2f}")
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred_lda))
+print()
+
+# Step 6: Train the Logistic Regression Model
+log_reg = LogisticRegression(max_iter=1000)
+log_reg.fit(X_train, y_train)
+y_pred_lr = log_reg.predict(X_test)
+
+# Step 7: Evaluate the Logistic Regression Model
+print("Logistic Regression Model Performance:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_lr):.2f}")
+print(f"Precision: {precision_score(y_test, y_pred_lr, average='macro'):.2f}")
+print(f"Recall: {recall_score(y_test, y_pred_lr, average='macro'):.2f}")
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred_lr))
+print()
+
+# Step 8: Visualize the Decision Boundaries using PCA (2D Projection)
+pca = PCA(n_components=2)  # Initialize PCA
+X_train_pca = pca.fit_transform(X_train)  # Transform the training data
+X_test_pca = pca.transform(X_test)  # Transform the test data
+
+# Train LDA and Logistic Regression on the reduced 2D data
+lda_2d = LinearDiscriminantAnalysis()
+lda_2d.fit(X_train_pca, y_train)
+
+log_reg_2d = LogisticRegression(max_iter=1000)
+log_reg_2d.fit(X_train_pca, y_train)
+
+# Function to plot decision boundaries
+def plot_decision_boundary(model, X, y, ax, title):
+    h = 0.1  # Step size for mesh grid
+    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+
+    # Predict over the mesh grid
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+
+    # Plot contour and scatter points
+    ax.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.RdYlBu)
+    scatter = ax.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.RdYlBu, edgecolor='black')
+    ax.set_title(title)
+
+# Create subplots for both models
+fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+
+plot_decision_boundary(lda_2d, X_test_pca, y_test, axes[0], "LDA Decision Boundary")
+plot_decision_boundary(log_reg_2d, X_test_pca, y_test, axes[1], "Logistic Regression Decision Boundary")
+
+# Show the plot
+plt.tight_layout()
+plt.show()
